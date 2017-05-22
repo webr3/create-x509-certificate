@@ -24,13 +24,12 @@ document.addEventListener("DOMContentLoaded", function() {
         var keyPair;
 
         var commonName       = document.getElementById("common-name").value;
-        var organization     = document.getElementById("organization").value;
-        var organizationUnit = document.getElementById("organization-unit").value;
-        var countryCode      = document.getElementById("country-code").value;
+        var webid            = document.getElementById("webid").value;
+        var organization     = 'WebID';
+        var organizationUnit = 'TLS';
+        var countryCode      = 'US';
 
         if (!commonName) {alert("You must enter a name for the certificate."); return;}
-        if (countryCode.length !== 2) {alert("Country codes must be two characters long."); return;}
-        countryCode = countryCode.toUpperCase();
 
         window.crypto.subtle.generateKey(
             {
@@ -47,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function() {
             return keyPair;
         }) .
         then(function(keyPair) {
-            return buildCertificateObject(commonName, organization, organizationUnit, countryCode, keyPair);
+            return buildCertificateObject(commonName, organization, organizationUnit, countryCode, webid, keyPair);
         }) .
         then(function(cert) {
             var pemCert = convertBinaryToPem(cert.toSchema(true).toBER(false), "CERTIFICATE");
@@ -78,14 +77,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
     // Returns a Promise yielding the certificate object
-    function buildCertificateObject(commonName, organization, organizationUnit, countryCode, keyPair) {
+    function buildCertificateObject(commonName, organization, organizationUnit, countryCode, webid, keyPair) {
         var cert = new org.pkijs.simpl.CERT();
 
         setSerialNumber(cert, Date.now());
         setSubject(cert, countryCode, organization, organizationUnit, commonName);
         setIssuer(cert, countryCode, organization, organizationUnit, commonName);
-        setValidityPeriod(cert, new Date(), 730);  // Good from today for 730 days
+        setValidityPeriod(cert, new Date(), 3650);  // Good from today for 10 years
         setEmptyExtensions(cert);
+        setSubjectAltName(cert, webid);
         setCABit(cert, false);
         setKeyUsage(cert, true, true, false, false, false, true, true); // digitalSignature, nonRepudiation, keyCertSign, cRLSign
         setSignatureAlgorithm(cert, "1.2.840.113549.1.1.11"); // RSA with SHA-256
@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function() {
             setEntity(cert.issuer, countryCode, organization, organizationUnit, commonName);
         }
 
-        function setEntity(entity, countryCode, organization, organizationUnit, commonName) {
+        function setEntity(entity, countryCode, organization, organizationUnit, commonName, webid) {
             if (countryCode) {
                 entity.types_and_values.push(new org.pkijs.simpl.ATTR_TYPE_AND_VALUE({
                         type: "2.5.4.6", //countryCode
@@ -154,6 +154,16 @@ document.addEventListener("DOMContentLoaded", function() {
         function setEmptyExtensions(cert) {
             cert.extensions = new Array();
         }
+
+		function setSubjectAltName(cert, san) {
+			var altNames = new org.pkijs.simpl.GENERAL_NAMES({ names: [ new org.pkijs.simpl.GENERAL_NAME({NameType: 6, Name: webid}) ] });
+
+			cert.extensions.push(new org.pkijs.simpl.EXTENSION({
+				extnID: "2.5.29.17",
+				critical: false,
+				extnValue: altNames.toSchema().toBER(false)
+			}));
+		}
 
         function setCABit(cert, isCA) {
             var basicConstraints = new org.pkijs.simpl.x509.BasicConstraints({
