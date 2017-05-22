@@ -2,7 +2,7 @@
 <!-- Copyright 2015 Info Tech, Inc. Provided under the MIT license. See LICENSE file for details. -->
 <html>
 <head>
-    <title>X.509 Certificate Creation</title>
+    <title>X.509 WebID Certificate Creation</title>
     <script src="certs.js"></script>
     <script src="common.js"></script>
     <script src="asn1.js"></script>
@@ -25,20 +25,12 @@
     <section id="user-information">
         <table>
             <tr>
-                <td><label for="common-name">Common Name:</label></td>
+                <td><label for="common-name">Full Name:</label></td>
                 <td><input type="text" id="common-name"/></td>
             </tr>
             <tr>
-                <td><label for="organization">Organization:</label></td>
-                <td><input type="text" id="organization"/></td>
-            </tr>
-            <tr>
-                <td><label for="organization-unit">Organization Unit:</label></td>
-                <td><input type="text" id="organization-unit"/></td>
-            </tr>
-            <tr>
-                <td><label for="country-code">Country Code:</label></td>
-                <td><input type="text" id="country-code" maxlength="2"/></td>
+                <td><label for="webid">Web ID:</label></td>
+                <td><input type="text" id="webid"/></td>
             </tr>
         </table>
         <p><button id="create-certificate">Create Certificate</button></p>
